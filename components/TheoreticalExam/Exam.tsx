@@ -51,8 +51,8 @@ export const Exam = ({ activeExam, setActiveExam }: ExamProps) => {
             as="p"
             className="text-sky-600 dark:text-sky-400 bg-sky-400/10 border border-sky-400/10 rounded-full py-1 px-3"
           >
-            النتيجة: {answers.filter((answer) => answer !== undefined).length} /{" "}
-            {scoreRef.current}
+            النتيجة: {scoreRef.current} \{" "}
+            {answers.filter((answer) => answer !== undefined).length}
           </Typography>
           <Typography as="p">
             السؤال {activeIndex + 1} من {limit + 1}

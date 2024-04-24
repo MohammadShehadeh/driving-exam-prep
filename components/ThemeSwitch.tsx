@@ -4,14 +4,25 @@ import React from "react";
 
 export const ThemeSwitch = () => {
   const toggleTheme = () => {
-    const isDarkMode = localStorage.getItem('darkMode') === 'true';
-    document.documentElement.classList.toggle("dark", isDarkMode);
-    localStorage.setItem('darkMode', `${!isDarkMode}`);
+    try {
+      const isLightMode = localStorage.getItem("darkMode") !== "true";
+      document.documentElement.classList.toggle("dark", isLightMode);
+      localStorage.setItem("darkMode", isLightMode.toString());
+    } catch (error) {
+      console.error("An error occurred while toggling theme mode:", error);
+    }
   };
 
   return (
-    <button onClick={toggleTheme} className="absolute sm:static left-[16px] top-0">
-      <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6 hidden dark:block">
+    <button
+      onClick={toggleTheme}
+      className="absolute sm:static left-[16px] top-0"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        className="w-6 h-6 hidden dark:block"
+      >
         <path
           fillRule="evenodd"
           clipRule="evenodd"

@@ -29,9 +29,12 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
 							try {
-                const isDarkMode = localStorage.darkMode === 'true';
-								document.documentElement.classList.toggle('dark', !localStorage.darkMode || !isDarkMode);
-							} catch (_) {}
+                const isDarkMode = localStorage.darkMode === undefined || localStorage.darkMode === 'true';
+                localStorage.setItem('darkMode', isDarkMode.toString())
+								document.documentElement.classList.toggle('dark', isDarkMode);
+							} catch (error) {
+                console.error('An error occurred while setting theme mode:', error);
+              }
 						`,
           }}
         />
