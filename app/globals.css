@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 svg {
-  width: 24px;
+  flex-shrink: 0;
   height: 24px;
+  width: 24px;
 }
 
 @layer utilities {
