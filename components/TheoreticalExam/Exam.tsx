@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { Typography } from "@/components/Typography";
 
 interface ExamProps {
@@ -10,12 +10,15 @@ interface ExamProps {
 export const Exam = ({ activeExam, setActiveExam }: ExamProps) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
-  const scoreRef = useRef(0);
 
   const question = activeExam?.[activeIndex];
   const correctAnswer = question?.answer;
   const currentAnswer = answers?.[activeIndex];
   const limit = activeExam.length - 1;
+
+  const score = answers.filter(
+    (answer, index) => answer === activeExam[index]?.answer
+  ).length;
 
   const nextHandler = () => {
     if (activeIndex === limit || answers[activeIndex] === undefined) {
@@ -34,10 +37,6 @@ export const Exam = ({ activeExam, setActiveExam }: ExamProps) => {
   };
 
   const answerHandler = (index: number) => {
-    if (index == question.answer) {
-      scoreRef.current += 1;
-    }
-
     const updatedAnswers = [...answers];
     updatedAnswers[activeIndex] = index;
     setAnswers(updatedAnswers);
@@ -51,7 +50,7 @@ export const Exam = ({ activeExam, setActiveExam }: ExamProps) => {
             as="p"
             className="text-sky-600 dark:text-sky-400 bg-sky-400/10 border border-sky-400/10 rounded-full py-1 px-3"
           >
-            النتيجة: {scoreRef.current} \{" "}
+            النتيجة: {score} \{" "}
             {answers.filter((answer) => answer !== undefined).length}
           </Typography>
           <Typography as="p">
