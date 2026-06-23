@@ -1,4 +1,4 @@
-import React, { PropsWithChildren } from "react";
+import React, { HTMLAttributes, PropsWithChildren } from "react";
 
 type Headings = "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "p";
 
@@ -16,15 +16,21 @@ const buildTypography = (as: Headings) => {
   return headings[as];
 };
 
-interface TypographyProps extends PropsWithChildren {
+interface TypographyProps
+  extends PropsWithChildren,
+    HTMLAttributes<HTMLElement> {
   as: Headings;
-  className?: string;
 }
 
 export const Typography = ({
   as: As,
   children,
   className = "",
+  ...rest
 }: TypographyProps) => {
-  return <As className={`${buildTypography(As)} ${className}`}>{children}</As>;
+  return (
+    <As className={`${buildTypography(As)} ${className}`} {...rest}>
+      {children}
+    </As>
+  );
 };

@@ -6,9 +6,10 @@ import { theoreticalExam } from "@/utils/navigation";
 import { Typography } from "@/components/Typography";
 import { Intro } from "./Intro";
 import { Exam } from "./Exam";
+import { Exam as ExamType } from "./types";
 
 export const TheoreticalExam = () => {
-  const [activeExam, setActiveExam] = useState<any>(null);
+  const [activeExam, setActiveExam] = useState<ExamType | null>(null);
 
   return (
     <div className="md:scroll-mt-[62px] scroll-mt-[8px] my-8 container" id={theoreticalExam.id}>

@@ -1,137 +1,319 @@
 /* eslint-disable @next/next/no-img-element */
 import React, { useState } from "react";
 import { Typography } from "@/components/Typography";
+import { Result } from "./Result";
+import { Exam as ExamType } from "./types";
 
 interface ExamProps {
-  activeExam: any;
-  setActiveExam: (exam: any) => void;
+  activeExam: ExamType;
+  setActiveExam: (exam: ExamType | null) => void;
 }
 
 export const Exam = ({ activeExam, setActiveExam }: ExamProps) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
+  const [finished, setFinished] = useState(false);
 
-  const question = activeExam?.[activeIndex];
+  const { questions } = activeExam;
+  const total = questions.length;
+  const question = questions[activeIndex];
   const correctAnswer = question?.answer;
-  const currentAnswer = answers?.[activeIndex];
-  const limit = activeExam.length - 1;
+  const currentAnswer = answers[activeIndex];
+  const isAnswered = currentAnswer !== undefined;
+  const isLast = activeIndex === total - 1;
 
+  const answeredCount = answers.filter((answer) => answer !== undefined).length;
   const score = answers.filter(
-    (answer, index) => answer === activeExam[index]?.answer
+    (answer, index) => answer === questions[index]?.answer
   ).length;
+  const progress = Math.round(((activeIndex + 1) / total) * 100);
 
   const nextHandler = () => {
-    if (activeIndex === limit || answers[activeIndex] === undefined) {
-      return;
+    if (!isLast && isAnswered) {
+      setActiveIndex((prev) => prev + 1);
     }
-
-    setActiveIndex((prev) => ++prev);
   };
 
   const prevHandler = () => {
-    if (activeIndex === 0) {
-      return;
+    if (activeIndex > 0) {
+      setActiveIndex((prev) => prev - 1);
     }
-
-    setActiveIndex((prev) => --prev);
   };
 
   const answerHandler = (index: number) => {
+    if (isAnswered) {
+      return;
+    }
+
     const updatedAnswers = [...answers];
     updatedAnswers[activeIndex] = index;
     setAnswers(updatedAnswers);
   };
 
+  const goToHandler = (index: number) => {
+    setActiveIndex(index);
+  };
+
+  const restartHandler = () => {
+    setActiveIndex(0);
+    setAnswers([]);
+    setFinished(false);
+  };
+
+  const exitHandler = () => {
+    if (answeredCount > 0 && !window.confirm("سيتم فقدان تقدمك في الاختبار. هل تريد الخروج؟")) {
+      return;
+    }
+    setActiveExam(null);
+  };
+
+  const resultMessage = !isAnswered
+    ? ""
+    : currentAnswer === correctAnswer
+    ? "إجابة صحيحة"
+    : `إجابة خاطئة، الإجابة الصحيحة: ${question.options[correctAnswer]}`;
+
+  if (finished) {
+    return (
+      <Result
+        examTitle={activeExam.text}
+        score={score}
+        total={total}
+        onRestart={restartHandler}
+        onExit={() => setActiveExam(null)}
+      />
+    );
+  }
+
   return (
-    <div className="border border-gray-700/20 dark:border-gray-700/50 p-5 md:p-6 bg-slate-200/20 dark:bg-slate-600/20 rounded-lg max-w-[700px] m-auto">
-      <div className="flex justify-between gap-2 items-start">
-        <div className="flex flex-col gap-2">
+    <div className="rounded-2xl border border-gray-200 dark:border-gray-700/60 bg-white/60 dark:bg-slate-800/40 p-5 md:p-7 max-w-[720px] mx-auto shadow-sm">
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <Typography as="p" className="truncate font-medium">
+            {activeExam.text}
+          </Typography>
           <Typography
             as="p"
-            className="text-sky-600 dark:text-sky-400 bg-sky-400/10 border border-sky-400/10 rounded-full py-1 px-3"
+            className="mt-1 text-sm text-gray-500 dark:text-gray-400"
+            aria-live="polite"
           >
-            النتيجة: {score} \{" "}
-            {answers.filter((answer) => answer !== undefined).length}
-          </Typography>
-          <Typography as="p">
-            السؤال {activeIndex + 1} من {limit + 1}
+            السؤال {activeIndex + 1} من {total}
           </Typography>
         </div>
-        <button
-          onClick={() => setActiveExam(null)}
-          aria-label="العوده الى الاختبارات"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="currentcolor"
-            version="1.1"
-            viewBox="0 0 26.676 26.676"
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1 rounded-full bg-green-400/10 border border-green-400/20 py-1 px-3 text-sm font-medium text-green-600 dark:text-green-400">
+            <CheckIcon className="h-4 w-4" />
+            {score}/{answeredCount}
+          </span>
+          <button
+            onClick={exitHandler}
+            aria-label="العوده الى الاختبارات"
+            className="rounded-full p-2 text-gray-500 hover:bg-gray-400/10 hover:text-gray-700 dark:hover:text-gray-200 transition"
           >
-            <path d="M26.105,21.891c-0.229,0-0.439-0.131-0.529-0.346l0,0c-0.066-0.156-1.716-3.857-7.885-4.59   c-1.285-0.156-2.824-0.236-4.693-0.25v4.613c0,0.213-0.115,0.406-0.304,0.508c-0.188,0.098-0.413,0.084-0.588-0.033L0.254,13.815   C0.094,13.708,0,13.528,0,13.339c0-0.191,0.094-0.365,0.254-0.477l11.857-7.979c0.175-0.121,0.398-0.129,0.588-0.029   c0.19,0.102,0.303,0.295,0.303,0.502v4.293c2.578,0.336,13.674,2.33,13.674,11.674c0,0.271-0.191,0.508-0.459,0.562   C26.18,21.891,26.141,21.891,26.105,21.891z"></path>
-          </svg>
-        </button>
+            <CloseIcon className="h-5 w-5" />
+          </button>
+        </div>
       </div>
-      <div className="flex justify-center flex-col items-center">
-        <Typography as="p" className="my-2">
-          {question.question}
-        </Typography>
-        {question.image && (
-          <img
-            key={question.image}
-            width={150}
-            height={125}
-            className="w-[150px] object-contain h-[125px]"
-            src={question.image}
-            alt={question.question}
-          />
+
+      <div
+        className="mb-6 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-slate-700"
+        role="progressbar"
+        aria-label="تقدّم الاختبار"
+        aria-valuenow={progress}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuetext={`السؤال ${activeIndex + 1} من ${total}`}
+      >
+        <div
+          className="h-full rounded-full bg-green-500 transition-[width] duration-300"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+
+      <Typography as="h4" className="!text-lg md:!text-xl leading-relaxed">
+        {question.question}
+      </Typography>
+
+      {question.image && (
+        <img
+          key={question.image}
+          width={180}
+          height={150}
+          className="my-4 mx-auto h-[150px] w-[180px] rounded-lg object-contain bg-white p-2"
+          src={question.image}
+          alt={question.imageAlt || question.question}
+        />
+      )}
+
+      <ul className="mt-4 space-y-2.5">
+        {question.options.map((option, index) => {
+          const isCorrect = index === correctAnswer;
+          const isSelected = currentAnswer === index;
+
+          let stateClass =
+            "border-gray-300/70 dark:border-gray-600/60 hover:border-green-400 hover:bg-green-400/5";
+
+          if (isAnswered && isCorrect) {
+            stateClass =
+              "border-green-500/60 bg-green-400/10 text-green-700 dark:text-green-400";
+          } else if (isAnswered && isSelected) {
+            stateClass =
+              "border-red-500/60 bg-red-400/10 text-red-700 dark:text-red-400";
+          } else if (isAnswered) {
+            stateClass =
+              "border-gray-200 dark:border-gray-700/50 text-gray-500 opacity-70";
+          }
+
+          return (
+            <li key={index}>
+              <button
+                disabled={isAnswered}
+                onClick={() => answerHandler(index)}
+                className={`flex w-full items-center justify-between gap-3 rounded-xl border py-3 px-4 md:px-5 text-right text-sm font-medium transition disabled:cursor-default md:text-base ${stateClass}`}
+              >
+                <span>{option}</span>
+                {isAnswered && isCorrect && (
+                  <CheckIcon className="h-5 w-5 shrink-0" />
+                )}
+                {isAnswered && isSelected && !isCorrect && (
+                  <CloseIcon className="h-5 w-5 shrink-0" />
+                )}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      <p className="sr-only" role="status" aria-live="polite">
+        {resultMessage}
+      </p>
+
+      <div className="mt-6 flex items-center justify-between gap-3">
+        <button
+          onClick={prevHandler}
+          disabled={activeIndex === 0}
+          className="inline-flex items-center gap-1 rounded-full border border-gray-300 dark:border-gray-600 py-2 px-5 font-medium transition hover:bg-gray-400/10 disabled:opacity-30 disabled:pointer-events-none"
+        >
+          <ChevronRightIcon className="h-4 w-4" />
+          السابق
+        </button>
+
+        {isLast ? (
+          <button
+            onClick={() => setFinished(true)}
+            disabled={!isAnswered}
+            className="rounded-full bg-green-600 hover:bg-green-700 text-white py-2 px-6 font-medium transition disabled:opacity-30 disabled:pointer-events-none"
+          >
+            إنهاء الاختبار
+          </button>
+        ) : (
+          <button
+            onClick={nextHandler}
+            disabled={!isAnswered}
+            className="inline-flex items-center gap-1 rounded-full bg-green-600 hover:bg-green-700 text-white py-2 px-6 font-medium transition disabled:opacity-30 disabled:pointer-events-none"
+          >
+            التالي
+            <ChevronLeftIcon className="h-4 w-4" />
+          </button>
         )}
-        <ul className="my-1">
-          {question.options.map((option: string, index: number) => {
-            const correctClassName =
-              currentAnswer !== undefined && index === correctAnswer
-                ? "text-green-600 dark:text-green-400 bg-green-400/10 border-green-400/10"
-                : "";
-            const wrongClassName =
-              currentAnswer === index && currentAnswer != correctAnswer
-                ? "text-red-600 dark:text-red-400 bg-red-400/10  border-red-400/10"
-                : "";
-            const defaultClassName =
-              !wrongClassName && !correctClassName
-                ? "text-gray-600 dark:text-gray-400 bg-gray-400/10  hover:bg-gray-400/20  border-gray-400/10 disabled:opacity-50 disabled:pointer-events-none"
-                : " ";
+      </div>
+
+      <nav
+        aria-label="الانتقال إلى سؤال"
+        className="mt-6 border-t border-gray-200 dark:border-gray-700/60 pt-4"
+      >
+        <Typography
+          as="p"
+          className="mb-3 text-sm text-gray-500 dark:text-gray-400"
+        >
+          الانتقال إلى سؤال
+        </Typography>
+        <ul className="flex flex-wrap gap-2">
+          {questions.map((item, index) => {
+            const answer = answers[index];
+            const isCurrent = index === activeIndex;
+
+            let stateClass =
+              "border-gray-300/70 dark:border-gray-600/60 text-gray-600 dark:text-gray-300 hover:border-green-400";
+
+            if (answer !== undefined) {
+              stateClass =
+                answer === item.answer
+                  ? "border-green-500/60 bg-green-400/10 text-green-700 dark:text-green-400"
+                  : "border-red-500/60 bg-red-400/10 text-red-700 dark:text-red-400";
+            }
 
             return (
-              <li key={index} className="my-2">
+              <li key={index}>
                 <button
-                  disabled={currentAnswer !== undefined}
-                  onClick={() => answerHandler(index)}
-                  className={`leading-5 font-medium md:text-base text-sm rounded-full py-2 md:px-6 px-4 w-full border ${defaultClassName} ${correctClassName} ${wrongClassName}`}
+                  onClick={() => goToHandler(index)}
+                  aria-label={`السؤال ${index + 1}`}
+                  aria-current={isCurrent ? "step" : undefined}
+                  className={`h-9 w-9 rounded-lg border text-sm font-medium transition ${stateClass} ${
+                    isCurrent
+                      ? "ring-2 ring-green-500 ring-offset-2 dark:ring-offset-slate-800"
+                      : ""
+                  }`}
                 >
-                  {option}
+                  {index + 1}
                 </button>
               </li>
             );
           })}
         </ul>
-        <div className="flex justify-between w-full">
-          <button
-            className="border border-gray-700/70 cursor-pointer hover:bg-gray-400/20 py-2 px-4 rounded-full disabled:opacity-20 disabled:pointer-events-none"
-            onClick={nextHandler}
-            disabled={
-              activeIndex === limit || answers[activeIndex] === undefined
-            }
-          >
-            التالي
-          </button>
-          <button
-            className="border border-gray-700/70 cursor-pointer hover:bg-gray-400/20 py-2 px-4 rounded-full disabled:opacity-30 disabled:pointer-events-none"
-            onClick={prevHandler}
-            disabled={activeIndex === 0}
-          >
-            السابق
-          </button>
-        </div>
-      </div>
+      </nav>
     </div>
   );
 };
+
+interface IconProps {
+  className?: string;
+}
+
+const CheckIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className}>
+    <path
+      d="m5 13 4 4L19 7"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const CloseIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className}>
+    <path
+      d="M6 6l12 12M18 6 6 18"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const ChevronLeftIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className}>
+    <path
+      d="m15 6-6 6 6 6"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const ChevronRightIcon = ({ className }: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className}>
+    <path
+      d="m9 6 6 6-6 6"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);

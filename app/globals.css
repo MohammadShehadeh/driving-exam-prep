@@ -24,10 +24,22 @@
   }
 }
 
-svg {
-  flex-shrink: 0;
-  height: 24px;
-  width: 24px;
+@layer base {
+  /* Default icon size; kept in the base layer so Tailwind size utilities
+     (e.g. h-4/w-5) still override it. */
+  svg {
+    flex-shrink: 0;
+    height: 24px;
+    width: 24px;
+  }
+
+  /* Consistent keyboard focus indicator across all interactive controls. */
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--color-green-500);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
 }
 
 @utility text-balance {
